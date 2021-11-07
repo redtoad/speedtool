@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"time"
@@ -8,7 +9,18 @@ import (
 	"github.com/ddo/go-fast"
 )
 
+var quiet bool
+
+func init() {
+	flag.BoolVar(&quiet, "q", false, "no status updates are printed to stdout")
+	flag.Parse()
+}
+
 func measureSpeed() ([]float64, error) {
+
+	if !quiet {
+		fmt.Println("Initialise measurements...")
+	}
 
 	fastCom := fast.New()
 	err := fastCom.Init()
@@ -27,13 +39,19 @@ func measureSpeed() ([]float64, error) {
 	go func() {
 		for speed := range updates {
 			measurements = append(measurements, speed)
-			// fmt.Printf("%f\n", speed)
+			if !quiet {
+				fmt.Printf("%f\n", speed)
+			}
 		}
 	}()
 
 	err = fastCom.Measure(urls, updates)
 	if err != nil {
 		return nil, err
+	}
+
+	if !quiet {
+		fmt.Println("Done.")
 	}
 
 	return measurements, nil
@@ -51,7 +69,7 @@ func main() {
 	dt := time.Now()
 	data, err := measureSpeed()
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
 	fmt.Printf(`{"ts": "%s", "speed": %f}`, dt.Format("2006-01-02T15:04:05-0700"), avg(data))
