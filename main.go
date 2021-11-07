@@ -11,9 +11,12 @@ import (
 )
 
 var quiet bool
+var outputFormat string
+var writer Writer
 
 func init() {
 	flag.BoolVar(&quiet, "q", false, "no status updates are printed to stdout")
+	flag.StringVar(&outputFormat, "output", "json", "output format: json, csv")
 	flag.Parse()
 }
 
@@ -66,7 +69,13 @@ func avg(numbers []float64) float64 {
 	return sum / float64(len(numbers))
 }
 
-func writeMeasurement(time time.Time, speed float64) {
+type Writer interface {
+	WriteMeasurement(time time.Time, speed float64)
+}
+
+type JSONWriter struct{}
+
+func (w JSONWriter) WriteMeasurement(time time.Time, speed float64) {
 	ts := time.Format("2006-01-02T15:04:05-0700")
 	if math.IsNaN(speed) {
 		fmt.Printf(`{"ts": "%s", "speed": null}`, ts)
@@ -75,16 +84,38 @@ func writeMeasurement(time time.Time, speed float64) {
 	}
 }
 
+type CSVWriter struct{}
+
+func (w CSVWriter) WriteMeasurement(time time.Time, speed float64) {
+	ts := time.Format("2006-01-02T15:04:05-0700")
+	if math.IsNaN(speed) {
+		fmt.Printf("%s;\n", ts)
+	} else {
+		fmt.Printf("%s;%f\n", ts, speed)
+	}
+}
+
 func main() {
 	dt := time.Now()
+
+	switch outputFormat {
+	case "json":
+		writer = JSONWriter{}
+	case "csv":
+		writer = CSVWriter{}
+	default:
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, "Error: Unsupported format %v\n", outputFormat)
+		os.Exit(1)
+	}
 
 	data, err := measureSpeed()
 	if err != nil {
 		// errors should also be registered
-		writeMeasurement(dt, math.NaN())
+		writer.WriteMeasurement(dt, math.NaN())
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
 
-	writeMeasurement(dt, avg(data))
+	writer.WriteMeasurement(dt, avg(data))
 }
