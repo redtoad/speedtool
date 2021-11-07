@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -65,12 +66,25 @@ func avg(numbers []float64) float64 {
 	return sum / float64(len(numbers))
 }
 
+func writeMeasurement(time time.Time, speed float64) {
+	ts := time.Format("2006-01-02T15:04:05-0700")
+	if math.IsNaN(speed) {
+		fmt.Printf(`{"ts": "%s", "speed": null}`, ts)
+	} else {
+		fmt.Printf(`{"ts": "%s", "speed": %f}`, ts, speed)
+	}
+}
+
 func main() {
 	dt := time.Now()
+
 	data, err := measureSpeed()
 	if err != nil {
+		// errors should also be registered
+		writeMeasurement(dt, math.NaN())
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
-	fmt.Printf(`{"ts": "%s", "speed": %f}`, dt.Format("2006-01-02T15:04:05-0700"), avg(data))
+
+	writeMeasurement(dt, avg(data))
 }
