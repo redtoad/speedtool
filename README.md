@@ -26,6 +26,10 @@ New releases are done with [GoReleaser](https://goreleaser.com/):
 
 ## Changes
 
+### 0.1.3 (2021-11-08)
+
+* Write all status updates to stderr.
+
 ### 0.1.2 (2021-11-07)
 
 * Add option `--output` to choose JSON or CSV as output format

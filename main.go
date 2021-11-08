@@ -23,7 +23,7 @@ func init() {
 func measureSpeed() ([]float64, error) {
 
 	if !quiet {
-		fmt.Println("Initialise measurements...")
+		fmt.Fprintf(os.Stderr, "Initialise measurements...\n")
 	}
 
 	fastCom := fast.New()
@@ -44,7 +44,7 @@ func measureSpeed() ([]float64, error) {
 		for speed := range updates {
 			measurements = append(measurements, speed)
 			if !quiet {
-				fmt.Printf("%f\n", speed)
+				fmt.Fprintf(os.Stderr, "%f\n", speed)
 			}
 		}
 	}()
@@ -55,7 +55,7 @@ func measureSpeed() ([]float64, error) {
 	}
 
 	if !quiet {
-		fmt.Println("Done.")
+		fmt.Fprintf(os.Stderr, "Done.\n")
 	}
 
 	return measurements, nil
@@ -78,9 +78,9 @@ type JSONWriter struct{}
 func (w JSONWriter) WriteMeasurement(time time.Time, speed float64) {
 	ts := time.Format("2006-01-02T15:04:05-0700")
 	if math.IsNaN(speed) {
-		fmt.Printf(`{"ts": "%s", "speed": null}`, ts)
+		fmt.Fprintf(os.Stdout, `{"ts": "%s", "speed": null}`, ts)
 	} else {
-		fmt.Printf(`{"ts": "%s", "speed": %f}`, ts, speed)
+		fmt.Fprintf(os.Stdout, `{"ts": "%s", "speed": %f}`, ts, speed)
 	}
 }
 
@@ -89,9 +89,9 @@ type CSVWriter struct{}
 func (w CSVWriter) WriteMeasurement(time time.Time, speed float64) {
 	ts := time.Format("2006-01-02T15:04:05-0700")
 	if math.IsNaN(speed) {
-		fmt.Printf("%s;\n", ts)
+		fmt.Fprintf(os.Stdout, "%s;\n", ts)
 	} else {
-		fmt.Printf("%s;%f\n", ts, speed)
+		fmt.Fprintf(os.Stdout, "%s;%f\n", ts, speed)
 	}
 }
 
